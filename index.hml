@@ -1,2 +1,103 @@
-<h1>欢迎来到我的个人博客！</h1>
-<p>这是我用 GitHub Pages 搭建的第一个网站。</p>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>板子參數設定工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen p-4">
+    <div class="max-w-xl mx-auto bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+        <div class="bg-blue-600 p-4">
+            <h2 class="text-xl font-bold text-white text-center">硬體參數配置 (POST)</h2>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <div class="border-b border-gray-700 pb-4">
+                <label class="block text-sm font-semibold text-blue-400 mb-1">板子 URL (例如 http://192.168.1.100/config)</label>
+                <input type="text" id="targetUrl" placeholder="http://" class="w-full bg-gray-700 border-none rounded p-2 focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div id="formContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400">ssid</label>
+                    <input type="text" data-key="ssid" value="miWIFI" class="w-full bg-gray-700 rounded p-2 text-sm border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400">password</label>
+                    <input type="text" data-key="password" value="25620278dd123" class="w-full bg-gray-700 rounded p-2 text-sm border-gray-600">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400">url_ser</label>
+                    <input type="text" data-key="url_ser" value="api4.tvenka.com" class="w-full bg-gray-700 rounded p-2 text-sm border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400">url_path</label>
+                    <input type="text" data-key="url_path" value="/IOT/InsertData" class="w-full bg-gray-700 rounded p-2 text-sm border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400">url_port</label>
+                    <input type="number" data-key="url_port" value="443" class="w-full bg-gray-700 rounded p-2 text-sm border-gray-600">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400">baudrate</label>
+                    <input type="number" data-key="baudrate" value="0" class="w-full bg-gray-700 rounded p-2 text-sm border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400">uart_st</label>
+                    <input type="number" data-key="uart_st" value="1" class="w-full bg-gray-700 rounded p-2 text-sm border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400">simwifi</label>
+                    <input type="number" data-key="simwifi" value="1" class="w-full bg-gray-700 rounded p-2 text-sm border-gray-600">
+                </div>
+                </div>
+
+            <button onclick="sendData()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg shadow-lg transition duration-200">
+                發送 POST 請求
+            </button>
+
+            <div class="mt-4">
+                <p class="text-xs font-mono text-gray-500">Response Console:</p>
+                <div id="log" class="mt-2 p-3 bg-black text-green-500 rounded font-mono text-xs min-h-[100px] whitespace-pre-wrap">準備就緒...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function sendData() {
+            const url = document.getElementById('targetUrl').value;
+            const logBox = document.getElementById('log');
+            
+            if (!url) { alert("請輸入目標網址！"); return; }
+
+            // 1. 自動蒐集所有 input 的 key 和 value
+            const inputs = document.querySelectorAll('#formContainer input');
+            const formData = new URLSearchParams(); // 使用這個會自動變成 x-www-form-urlencoded 格式
+            
+            inputs.forEach(input => {
+                formData.append(input.getAttribute('data-key'), input.value);
+            });
+
+            logBox.innerText = `正在發送至: ${url}...\nPayload: ${formData.toString()}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData.toString()
+                });
+
+                const result = await response.text();
+                logBox.innerText = `[SUCCESS] 狀態碼: ${response.status}\n\n回應內容:\n${result}`;
+            } catch (err) {
+                logBox.innerText = `[ERROR] 請求失敗：\n${err.message}\n\n提示：請確認板子是否有開啟 CORS，或嘗試關閉瀏覽器的跨來源安全檢查。`;
+            }
+        }
+    </script>
+</body>
+</html>
